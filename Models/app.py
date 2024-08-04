@@ -1,15 +1,33 @@
+import os
+import sys
 from flask import Flask, request, render_template
 import joblib
 import pandas as pd
 import numpy as np
 
-app = Flask(__name__)
+# Get the directory of the current script
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# Get the parent directory
+parent_dir = os.path.dirname(current_dir)
+# Add the parent directory to sys.path
+sys.path.append(parent_dir)
+
+# Define paths
+MODEL_PATH = os.path.join(current_dir, 'period_predictor_model.joblib')
+SCALER_PATH = os.path.join(current_dir, 'scaler.joblib')
+FEATURE_NAMES_PATH = os.path.join(current_dir, 'feature_names.joblib')
+TEMPLATE_DIR = os.path.join(parent_dir, 'Templates')
+
+app = Flask(__name__, template_folder=TEMPLATE_DIR)
 
 # Load the trained model
-model = joblib.load('period_predictor_model.joblib')
+model = joblib.load(MODEL_PATH)
 
 # Load the scaler
-scaler = joblib.load('scaler.joblib')
+scaler = joblib.load(SCALER_PATH)
+
+# Load the feature names
+feature_names = joblib.load(FEATURE_NAMES_PATH)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -25,9 +43,6 @@ def predict():
 
         # Create a dataframe with user input
         user_df = pd.DataFrame([user_data])
-
-        # Get the feature names from the model
-        feature_names = model.feature_names_in_
 
         # Create a DataFrame with all features, filling missing ones with 0
         full_user_df = pd.DataFrame(columns=feature_names)

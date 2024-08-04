@@ -2,7 +2,7 @@
 import pandas as pd
 
 # Load the CSV file
-file_path = 'Datasets/FedCycleData071012 (2).csv'
+file_path = '../Datasets/FedCycleData071012 (2).csv'
 data = pd.read_csv(file_path)
 
 # Display the first few rows of the DataFrame to understand its structure
@@ -17,7 +17,7 @@ print(data.dtypes)
 # Basic statistical summary
 print(data.describe())
 #%%
-threshold = 0.5  # 50% threshold, adjust as needed
+threshold = 0.5
 
 # Remove columns with majority N/A values
 data_cleaned = data.loc[:, data.isnull().mean() < threshold]
@@ -166,6 +166,29 @@ plt.show()
 #%%
 import joblib
 
-joblib.dump(scaler, 'Models/scaler.joblib')
-joblib.dump(rf_model, 'Models/period_predictor_model.joblib')
+# Get feature names excluding the target variable
+feature_names = [col for col in df.columns if col != 'LengthofCycle']
+
+# Prepare the features and target
+X = df[feature_names]
+y = df['LengthofCycle']
+
+# Create and fit the scaler
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Create a new Random Forest model with only the input features
+rf_model_for_prediction = RandomForestRegressor(random_state=42)
+rf_model_for_prediction.fit(X_scaled, y)
+
+# Save the scaler
+joblib.dump(scaler, '../Models/scaler.joblib')
+
+# Save the Random Forest model
+joblib.dump(rf_model_for_prediction, '../Models/period_predictor_model.joblib')
+
+# Save the feature names
+joblib.dump(feature_names, '../Models/feature_names.joblib')
+
+print("Models and feature names saved successfully.")
 #%%
