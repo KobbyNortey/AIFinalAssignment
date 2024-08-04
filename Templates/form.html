@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Period Predictor</title>
+</head>
+<body>
+    <h1>Period Predictor</h1>
+    <form method="POST">
+        <label for="age">Age:</label>
+        <input type="number" name="age" required><br><br>
+
+        <label for="bmi">BMI:</label>
+        <input type="number" step="0.1" name="bmi" required><br><br>
+
+        <label for="last_cycle_length">Last Cycle Length (days):</label>
+        <input type="number" name="last_cycle_length" required><br><br>
+
+        <label for="avg_cycle_length">Average Cycle Length (days):</label>
+        <input type="number" name="avg_cycle_length" required><br><br>
+
+        <input type="submit" value="Predict">
+    </form>
+</body>
+</html>
