@@ -33,10 +33,8 @@ feature_names = joblib.load(FEATURE_NAMES_PATH)
 @app.route('/', methods=['GET', 'POST'])
 def predict():
     if request.method == 'POST':
-        # Load all possible features
         all_features = joblib.load(FEATURE_NAMES_PATH)
 
-        # Create a dictionary to hold all feature values, initialized with zeros or appropriate default values
         user_data = {feature: 0 for feature in all_features}
 
         # Update the dictionary with the values we actually have from the form
@@ -49,22 +47,19 @@ def predict():
             'MeanBleedingIntensity': float(request.form.get('bleeding_intensity', 0)),
         })
 
-        # Create a dataframe with user input
         user_df = pd.DataFrame([user_data])
 
-        # Normalize the input data
         user_data_normalized = scaler.transform(user_df)
 
-        # Make prediction
         prediction = model.predict(user_data_normalized)
 
-        # The prediction is the length of the cycle, so we need to subtract the days since last period
         days_since_last_period = float(request.form['days_since_last_period'])
         days_until_next_period = max(0, prediction[0] - days_since_last_period)
 
         return render_template('result.html', prediction=days_until_next_period)
 
     return render_template('form.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
