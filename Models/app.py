@@ -33,35 +33,38 @@ feature_names = joblib.load(FEATURE_NAMES_PATH)
 @app.route('/', methods=['GET', 'POST'])
 def predict():
     if request.method == 'POST':
-        # Get user input from the form
-        user_data = {
+        # Load all possible features
+        all_features = joblib.load(FEATURE_NAMES_PATH)
+
+        # Create a dictionary to hold all feature values, initialized with zeros or appropriate default values
+        user_data = {feature: 0 for feature in all_features}
+
+        # Update the dictionary with the values we actually have from the form
+        user_data.update({
             'Age': float(request.form['age']),
             'BMI': float(request.form['bmi']),
-            'LastCycleLength': float(request.form['last_cycle_length']),
-            'AvgCycleLength': float(request.form['avg_cycle_length'])
-        }
+            'MeanCycleLength': float(request.form['mean_cycle_length']),
+            'LengthofMenses': float(request.form.get('menses_length', 5)),
+            'UnusualBleeding': int(request.form.get('unusual_bleeding', 0)),
+            'MeanBleedingIntensity': float(request.form.get('bleeding_intensity', 0)),
+        })
 
         # Create a dataframe with user input
         user_df = pd.DataFrame([user_data])
 
-        # Create a DataFrame with all features, filling missing ones with 0
-        full_user_df = pd.DataFrame(columns=feature_names)
-        for feature in feature_names:
-            if feature in user_df.columns:
-                full_user_df[feature] = user_df[feature]
-            else:
-                full_user_df[feature] = 0
-
         # Normalize the input data
-        user_data_normalized = scaler.transform(full_user_df)
+        user_data_normalized = scaler.transform(user_df)
 
         # Make prediction
         prediction = model.predict(user_data_normalized)
 
-        return render_template('result.html', prediction=prediction[0])
+        # The prediction is the length of the cycle, so we need to subtract the days since last period
+        days_since_last_period = float(request.form['days_since_last_period'])
+        days_until_next_period = max(0, prediction[0] - days_since_last_period)
+
+        return render_template('result.html', prediction=days_until_next_period)
 
     return render_template('form.html')
-
 
 if __name__ == '__main__':
     app.run(debug=True)

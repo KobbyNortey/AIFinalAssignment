@@ -5,70 +5,43 @@ import pandas as pd
 file_path = '../Datasets/FedCycleData071012 (2).csv'
 data = pd.read_csv(file_path)
 
-# Display the first few rows of the DataFrame to understand its structure
-print(data.head(10))
+# Select features and target
+features = ['Age', 'BMI', 'MeanCycleLength',
+            'LengthofMenses', 'UnusualBleeding',
+            'MeanBleedingIntensity']
 
-# Check for missing values
-print(data.isnull().sum())
+print("Features used for training:", features)
 
-# Display the columns and their data types
-print(data.dtypes)
+X = data[features]
+y = data['LengthofCycle']
 
-# Basic statistical summary
-print(data.describe())
+
+#
+
 #%%
-threshold = 0.5
 
-# Remove columns with majority N/A values
-data_cleaned = data.loc[:, data.isnull().mean() < threshold]
-
-# Display the columns that remain after cleaning
-print("Remaining columns after removing those with majority N/A values:")
-print(data_cleaned.columns)
-#%%
-data_cleaned
-#%%
-df=data_cleaned
-#%%
-df
 #%%
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 
-
-
-
-for column in df.columns:
-    if df[column].dtype == 'object':
-        df[column].fillna(data_cleaned[column].mode()[0], inplace=True)
-    else:
-        df[column].fillna(df[column].median(), inplace=True)
-
-# Encode categorical variables
-label_encoders = {}
-for column in data_cleaned.select_dtypes(include=['object']).columns:
-    le = LabelEncoder()
-    df[column] = le.fit_transform(df[column])
-    label_encoders[column] = le
-
 #%%
-# Normalize numerical features
+
+# Handle missing values
+
+
+# Convert categorical variables to numeric
+for col in X.select_dtypes(include=['object']):
+    X[col] = pd.Categorical(X[col]).codes
+# Scale the features
 scaler = StandardScaler()
-numerical_columns = df.select_dtypes(include=['float64', 'int64']).columns
-df[numerical_columns] = scaler.fit_transform(df[numerical_columns])
+X_scaled = scaler.fit_transform(X)
+
+print("Available features:", X.columns.tolist())
 
 #%%
-# Define the target variable
-target = 'LengthofCycle'  # Target variable for prediction
-features = df.drop(columns=[target])
-target_data = df[target]
-
-# Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(features, target_data, test_size=0.2, random_state=42)
-
-
-
+# Split the data
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
 
 #%%
 
@@ -136,42 +109,36 @@ knn_predictions = knn_model.predict(X_test)
 knn_mae = mean_absolute_error(y_test, knn_predictions)
 knn_rmse = mean_squared_error(y_test, knn_predictions, squared=False)
 print(f'K-Nearest Neighbors Regressor MAE: {knn_mae}, RMSE: {knn_rmse}')
-#%%
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-# Histogram of LengthofCycle
-plt.figure(figsize=(10, 6))
-sns.histplot(data['LengthofCycle'], kde=True)
-plt.title('Histogram of Cycle Lengths')
-plt.xlabel('Cycle Length')
-plt.ylabel('Frequency')
-plt.show()
-#%%
-# Correlation Matrix
-plt.figure(figsize=(12, 10))
-correlation_matrix = data_cleaned.corr()
-sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm')
-plt.title('Correlation Matrix')
-plt.show()
-#%%
-plt.figure(figsize=(10, 6))
-plt.scatter(y_test, rf_predictions, alpha=0.5)
-plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], 'r')
-plt.title('Prediction vs Actual Values (Random Forest)')
-plt.xlabel('Actual Values')
-plt.ylabel('Predicted Values')
-plt.show()
+# #%%
+# import matplotlib.pyplot as plt
+# import seaborn as sns
+#
+# # Histogram of LengthofCycle
+# plt.figure(figsize=(10, 6))
+# sns.histplot(data['LengthofCycle'], kde=True)
+# plt.title('Histogram of Cycle Lengths')
+# plt.xlabel('Cycle Length')
+# plt.ylabel('Frequency')
+# plt.show()
+# #%%
+# # Correlation Matrix
+# plt.figure(figsize=(12, 10))
+# correlation_matrix = data_cleaned.corr()
+# sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm')
+# plt.title('Correlation Matrix')
+# plt.show()
+# #%%
+# plt.figure(figsize=(10, 6))
+# plt.scatter(y_test, rf_predictions, alpha=0.5)
+# plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], 'r')
+# plt.title('Prediction vs Actual Values (Random Forest)')
+# plt.xlabel('Actual Values')
+# plt.ylabel('Predicted Values')
+# plt.show()
 
 #%%
 import joblib
 
-# Get feature names excluding the target variable
-feature_names = [col for col in df.columns if col != 'LengthofCycle']
-
-# Prepare the features and target
-X = df[feature_names]
-y = df['LengthofCycle']
 
 # Create and fit the scaler
 scaler = StandardScaler()
@@ -188,7 +155,7 @@ joblib.dump(scaler, '../Models/scaler.joblib')
 joblib.dump(rf_model_for_prediction, '../Models/period_predictor_model.joblib')
 
 # Save the feature names
-joblib.dump(feature_names, '../Models/feature_names.joblib')
+joblib.dump(features, '../Models/feature_names.joblib')
 
 print("Models and feature names saved successfully.")
 #%%
