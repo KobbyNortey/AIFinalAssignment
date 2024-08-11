@@ -1,33 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Period Predictor</title>
+    <link rel="stylesheet" href="../Static/styles.css">
+    <script src="../Static/scripts.js" defer></script>
 </head>
 <body>
-    <h1>Period Predictor</h1>
-    <form method="POST">
-        <label for="age">Age:</label>
-        <input type="number" name="age" required><br><br>
+    <div class="container">
+        <h1>Period Predictor</h1>
+        <form id="predictor-form" action="/" method="POST">
+            <div class="form-group">
+                <label for="age">Age:</label>
+                <input type="number" id="age" name="age" required>
+            </div>
 
-        <label for="bmi">BMI:</label>
-        <input type="number" step="0.1" name="bmi" required><br><br>
+            <div class="form-group">
+                <label for="bmi">BMI:</label>
+                <input type="number" id="bmi" name="bmi" step="0.1" required>
+            </div>
 
-        <label for="mean_cycle_length">Average Cycle Length (days):</label>
-        <input type="number" name="mean_cycle_length" required><br><br>
+            <div class="form-group">
+                <label for="cycle-length">Average Cycle Length (days):</label>
+                <input type="number" id="cycle-length" name="mean_cycle_length" required>
+            </div>
 
-        <label for="menses_length">Length of Menses (days):</label>
-        <input type="number" name="menses_length" value="5"><br><br>
+            <div class="form-group">
+                <label for="menses-length">Length of Menses (days):</label>
+                <input type="number" id="menses-length" name="menses_length" required>
+            </div>
 
-        <label for="unusual_bleeding">Unusual Bleeding:</label>
-        <input type="checkbox" name="unusual_bleeding" value="1"><br><br>
+            <div class="form-group">
+                <label for="unusual-bleeding">Unusual Bleeding:</label>
+                <select id="unusual-bleeding" name="unusual_bleeding">
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                </select>
+            </div>
 
-        <label for="bleeding_intensity">Mean Bleeding Intensity (1-5):</label>
-        <input type="number" name="bleeding_intensity" min="1" max="5" value="3"><br><br>
+            <div class="form-group">
+                <label for="bleeding-intensity">Mean Bleeding Intensity (1-5):</label>
+                <input type="number" id="bleeding-intensity" name="bleeding_intensity" min="1" max="5" required>
+            </div>
 
-        <label for="days_since_last_period">Days Since Last Period:</label>
-        <input type="number" name="days_since_last_period" required><br><br>
+            <div class="form-group">
+                <label for="days-since-last">Days Since Last Period:</label>
+                <input type="number" id="days-since-last" name="days_since_last_period" required>
+            </div>
 
-        <input type="submit" value="Predict">
-    </form>
+            <input type="submit" value="Predict">
+        </form>
+    </div>
 </body>
 </html>

@@ -1,11 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prediction Result</title>
+    <link rel="stylesheet" href="/Static/styles.css">
 </head>
 <body>
-    <h1>Prediction Result</h1>
-    <p>Your next period is predicted to start in approximately {{ prediction|round|int }} days.</p>
-    <a href="/">Make another prediction</a>
+    <div class="container">
+        <h1>Prediction Result</h1>
+        <div class="result">
+            <p>Your predicted next period is in <strong>{{ prediction|round|int }} days</strong>.</p>
+            <p>Make sure to mark this date on your calendar!</p>
+        </div>
+        <button class="btn" onclick="goBack()">Go Back</button>
+    </div>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
 </body>
 </html>
