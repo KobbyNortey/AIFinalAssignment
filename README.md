@@ -5,7 +5,7 @@
 ---
 
 ### Project Description
-This project focuses on implementing AI techniques to predict specific outcomes based on the provided datasets. It includes data preprocessing, model training, evaluation, and visualization of results.
+This project focuses on implementing AI techniques to predict a person's next menstrual cycle. It includes data preprocessing, model training, evaluation, and visualization of results.
 
 ---
 
