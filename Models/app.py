@@ -1,9 +1,9 @@
 import os
 import sys
-from flask import Flask, request, render_template
-import joblib
-import pandas as pd
+from flask import Flask, render_template, request, jsonify
 import numpy as np
+from tensorflow.keras.models import load_model
+import joblib
 
 # Get the directory of the current script
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -12,51 +12,100 @@ parent_dir = os.path.dirname(current_dir)
 # Add the parent directory to sys.path
 sys.path.append(parent_dir)
 
-# Define paths
-MODEL_PATH = os.path.join(current_dir, 'period_predictor_model.joblib')
-SCALER_PATH = os.path.join(current_dir, 'scaler.joblib')
-FEATURE_NAMES_PATH = os.path.join(current_dir, 'feature_names.joblib')
 TEMPLATE_DIR = os.path.join(parent_dir, 'Templates')
+STATIC_DIR = os.path.join(parent_dir, 'Static')
 
-app = Flask(__name__, template_folder=TEMPLATE_DIR)
+app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
 
-# Load the trained model
-model = joblib.load(MODEL_PATH)
+# Load the saved model and scalers
+lstm_model = load_model('../Models/lstm_model.keras')
+scaler = joblib.load('../Models/scaler.pkl')
+target_scaler = joblib.load('../Models/target_scaler.pkl')
+label_encoders = joblib.load('../Models/label_encoders.pkl')
 
-# Load the scaler
-scaler = joblib.load(SCALER_PATH)
 
-# Load the feature names
-feature_names = joblib.load(FEATURE_NAMES_PATH)
+def preprocess_input(input_data):
+    print("Input data:", input_data)
+    numerical_columns = ['Age', 'BMI', 'MeanCycleLength', 'LengthofMenses', 'UnusualBleeding', 'MeanBleedingIntensity']
+    print("Numerical columns:", numerical_columns)
+
+    # Create a list of values in the order expected by the scaler
+    input_values = []
+    for column in numerical_columns:
+        if column in input_data:
+            input_values.append(float(input_data[column]))
+        else:
+            print(f"Warning: {column} not found in input data. Setting to 0.")
+            input_values.append(0.0)
+
+    print("Input values:", input_values)
+
+    # Scale numerical features
+    input_scaled = scaler.transform([input_values])
+
+    return input_scaled
+
+
+def create_sequences(features, time_steps=5):
+    if features.ndim == 1:
+        features = features.reshape(1, -1)
+    X = np.repeat(features, time_steps, axis=0)
+    return X
+
+
+def predict_cycle_length(input_data):
+    # Preprocess the input data
+    input_scaled = preprocess_input(input_data)
+
+    # Create sequences
+    input_seq = create_sequences(input_scaled[0])  # Use [0] to get the first (and only) row
+
+    print("Input sequence shape:", input_seq.shape)
+
+    # Make prediction
+    prediction = lstm_model.predict(np.expand_dims(input_seq, axis=0))
+
+    print("Raw prediction shape:", prediction.shape)
+    print("Raw prediction:", prediction)
+
+    # Reshape prediction if necessary
+    if prediction.ndim > 2:
+        prediction = prediction.reshape(prediction.shape[0], -1)
+
+    print("Reshaped prediction shape:", prediction.shape)
+
+    # Inverse transform the prediction
+    prediction_rescaled = target_scaler.inverse_transform(prediction)
+
+    print("Rescaled prediction shape:", prediction_rescaled.shape)
+    print("Rescaled prediction:", prediction_rescaled)
+
+    return prediction_rescaled[0][0]
 
 
 @app.route('/', methods=['GET', 'POST'])
-def predict():
+def index():
     if request.method == 'POST':
-        all_features = joblib.load(FEATURE_NAMES_PATH)
-
-        user_data = {feature: 0 for feature in all_features}
-
-        # Update the dictionary with the values we actually have from the form
-        user_data.update({
+        # Get data from form
+        input_data = {
             'Age': float(request.form['age']),
             'BMI': float(request.form['bmi']),
             'MeanCycleLength': float(request.form['mean_cycle_length']),
-            'LengthofMenses': float(request.form.get('menses_length', 5)),
-            'UnusualBleeding': int(request.form.get('unusual_bleeding', 0)),
-            'MeanBleedingIntensity': float(request.form.get('bleeding_intensity', 0)),
-        })
+            'LengthofMenses': float(request.form['menses_length']),
+            'UnusualBleeding': 1.0 if request.form['unusual_bleeding'] == 'yes' else 0.0,
+            'MeanBleedingIntensity': float(request.form['bleeding_intensity']),
+            'DaysSinceLast': float(request.form['days_since_last_period'])
+        }
 
-        user_df = pd.DataFrame([user_data])
+        print("Form data:", input_data)
 
-        user_data_normalized = scaler.transform(user_df)
+        # Make prediction
+        prediction = predict_cycle_length(input_data)
 
-        prediction = model.predict(user_data_normalized)
+        # Round prediction to nearest integer
+        prediction = round(prediction)
 
-        days_since_last_period = float(request.form['days_since_last_period'])
-        days_until_next_period = max(0, prediction[0] - days_since_last_period)
-
-        return render_template('result.html', prediction=days_until_next_period)
+        return render_template('result.html', prediction=prediction)
 
     return render_template('form.html')
 
