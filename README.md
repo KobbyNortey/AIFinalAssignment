@@ -5,7 +5,7 @@
 ---
 
 ### Project Description
-This project focuses on implementing AI techniques to predict a person's next menstrual cycle. It includes data preprocessing, model training, evaluation, and visualization of results.
+This project is focused on predicting the length of a menstrual cycle using a Long Short-Term Memory (LSTM) model. The project includes a web-based interface where users can input relevant data, and the model predicts the next cycle length. The LSTM model is trained on historical data and is capable of capturing temporal dependencies, making it well-suited for time-series prediction tasks.
 
 ---
 
@@ -17,14 +17,20 @@ AIFinalProject/
 ├── predictor.py             # Main Python script for prediction
 ├── Datasets/                # Folder containing datasets used in the project
 ├── Models/                  # Folder containing trained models
-├── Static/                  # Folder containing static files (e.g., images)
+├── Static/                  # Folder containing static files 
 ├── Templates/               # Folder containing template files
-├── README.md                # README file (this document)
+├── README.md                # README file
 
 ```
 
 ---
+### Features
 
+- **LSTM Model:** The core of the project is an LSTM model trained to predict cycle length based on user input.
+- **Web Interface:** A Flask web application that allows users to input data and receive predictions.
+
+
+---
 ### Installation
 To set up the project on your local machine, follow these steps:
 
